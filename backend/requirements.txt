@@ -1,4 +1,9 @@
 fastapi==0.115.0
 uvicorn==0.30.6
-llama-cpp-python==0.3.2
 pydantic==2.9.2
+
+# AI_MODE=ollama (default)
+ollama==0.3.3
+
+# AI_MODE=embedded — uncomment if using embedded mode
+# llama-cpp-python==0.3.2

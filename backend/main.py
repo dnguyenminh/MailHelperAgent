@@ -1,26 +1,24 @@
 """
-OEHA-3/4: FastAPI backend — Email analysis endpoint with Ollama
+OEHA-3/4: FastAPI backend — Email analysis endpoint
+Supports 2 modes via AI_MODE env var: "ollama" (default) or "embedded"
 """
 
 import time
-import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from models import EmailRequest, AnalyzeResponse
 from services.analyzer import EmailAnalyzer
 
-MODEL_NAME = "qwen2.5-3b-instruct (embedded GGUF)"
-
 app = FastAPI(title="Email Helper Agent Backend", version="1.0.0")
 
-# CORS — allow Outlook Add-in (localhost:3000)
+# CORS — allow Outlook Add-in
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://localhost:3000",
         "http://localhost:3000",
-        "null",  # Office Add-in iframe origin
+        "null",
     ],
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,7 +29,8 @@ analyzer = EmailAnalyzer()
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "model": MODEL_NAME}
+    info = analyzer.get_mode_info()
+    return {"status": "ok", **info}
 
 
 @app.post("/api/analyze-email")
@@ -44,6 +43,8 @@ async def analyze_email(req: EmailRequest):
 
     try:
         result = analyzer.analyze(req.subject, req.body)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         error_msg = str(e)
         if "connection" in error_msg.lower() or "refused" in error_msg.lower():
@@ -54,10 +55,11 @@ async def analyze_email(req: EmailRequest):
         raise HTTPException(status_code=500, detail=f"AI processing error: {error_msg}")
 
     processing_time = int((time.time() - start_time) * 1000)
+    mode_info = analyzer.get_mode_info()
 
     return AnalyzeResponse(
         summary=result.get("summary", []),
         suggestedReplies=result.get("suggestedReplies", []),
         processingTime=processing_time,
-        model=MODEL_NAME,
+        model=f"{mode_info['model']} ({mode_info['mode']})",
     )
