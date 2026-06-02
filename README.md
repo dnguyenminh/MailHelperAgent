@@ -205,6 +205,7 @@ npm run watch        # Watch mode
 
 | Version | Date | Changes |
 |---------|------|---------|
+| v1.1.1 | 2026-06-02 | Code review fixes: debounce, accessibility, configurable URL, startup validation |
 | v1.1.0 | 2026-06-02 | Dual-mode AI (Ollama + Embedded GGUF) |
 | v1.0.0 | 2026-06-02 | Initial release |
 
