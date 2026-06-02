@@ -23,6 +23,21 @@ let selectedReplyIndex: number | null = null;
 let regenerateCount = 0;
 const MAX_REGENERATE = 3;
 
+// OEHA-11: Guard flag to prevent duplicate event handler binding
+let actionButtonsBound = false;
+
+// OEHA-13: Debounce helper to prevent rapid duplicate API calls
+function debounce<T extends (...args: unknown[]) => unknown>(fn: T, delayMs: number): T {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  return ((...args: unknown[]) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delayMs);
+  }) as unknown as T;
+}
+
+// OEHA-13: Debounced version of onAnalyzeClick (500ms)
+const debouncedAnalyze = debounce(() => onAnalyzeClick(), 500);
+
 Office.onReady((info) => {
   if (info.host === Office.HostType.Outlook) {
     initialize();
@@ -40,6 +55,8 @@ function initialize(): void {
   // Subscribe renderer to state changes
   appState.subscribe((state) => {
     renderer.render(state);
+    // OEHA-11: Reset bound flag when DOM re-renders, then rebind once
+    actionButtonsBound = false;
     bindActionButtons();
   });
 
@@ -66,22 +83,26 @@ async function loadEmail(): Promise<void> {
 }
 
 function bindActionButtons(): void {
+  // OEHA-11: Only bind once per render cycle to prevent duplicate handlers
+  if (actionButtonsBound) return;
+  actionButtonsBound = true;
+
   // Retry button
   const retryBtn = document.getElementById("btn-retry");
   if (retryBtn) {
     retryBtn.onclick = () => loadEmail();
   }
 
-  // Summarize button (OEHA-3)
+  // Summarize button (OEHA-3) — OEHA-13: debounced to prevent double-click spam
   const summarizeBtn = document.getElementById("btn-summarize");
   if (summarizeBtn) {
-    summarizeBtn.onclick = () => onAnalyzeClick();
+    summarizeBtn.onclick = () => debouncedAnalyze();
   }
 
-  // Suggest reply button (OEHA-4)
+  // Suggest reply button (OEHA-4) — OEHA-13: debounced
   const suggestBtn = document.getElementById("btn-suggest");
   if (suggestBtn) {
-    suggestBtn.onclick = () => onAnalyzeClick();
+    suggestBtn.onclick = () => debouncedAnalyze();
   }
 }
 
@@ -128,9 +149,9 @@ async function onAnalyzeClick(): Promise<void> {
     const message = err instanceof Error ? err.message : "Lỗi không xác định";
     if (summarySection) {
       summarySection.innerHTML = `
-        <div class="error-container">
+        <div class="error-container" role="alert" aria-live="assertive">
           <p class="error-text">${getAIErrorMessage(message)}</p>
-          <button id="btn-retry-ai" class="btn btn-secondary">Thử lại</button>
+          <button id="btn-retry-ai" class="btn btn-secondary" aria-label="Thử phân tích lại">Thử lại</button>
         </div>
       `;
       const retryAI = document.getElementById("btn-retry-ai");
