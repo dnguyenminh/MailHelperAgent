@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Email Helper Agent</title>
+
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <!-- Fluent UI -->
+    <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"/>
+
+    <!-- App styles -->
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="ms-font-m ms-Fabric">
+    <header class="app-header">
+        <img width="32" height="32" src="../../assets/icon-32.png" alt="Email Helper" />
+        <h1 class="ms-font-l app-title">Email Helper Agent</h1>
+    </header>
+
+    <section id="sideload-msg" class="sideload-msg">
+        <h2 class="ms-font-xl">Vui lòng <a target="_blank" href="https://learn.microsoft.com/office/dev/add-ins/testing/test-debug-office-add-ins#sideload-an-office-add-in-for-testing">sideload</a> add-in để sử dụng.</h2>
+    </section>
+
+    <main id="app-body" class="app-body" style="display: none;">
+        <!-- Content rendered dynamically by UIRenderer -->
+    </main>
+
+    <div id="toast" class="toast" aria-live="polite"></div>
+</body>
+
+</html>

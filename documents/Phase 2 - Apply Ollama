@@ -1,0 +1,197 @@
+Tuyệt vời, sử dụng **Ollama** để chạy LLM cục bộ (Local) là một giải pháp xuất sắc để bảo mật dữ liệu email doanh nghiệp, tránh rò rỉ thông tin nhạy cảm ra ngoài internet và tối ưu chi phí.
+
+Vì bạn chạy Ollama, hệ thống sẽ tối ưu nhất khi thiết lập một **Backend trung gian (Python hoặc Java)** để nhận request từ Outlook Add-in, kết nối với Ollama, cấu hình Prompt hệ thống và trả kết quả dạng JSON sạch về cho Frontend.
+
+Dưới đây là kiến trúc chi tiết và mã nguồn mẫu cho luồng xử lý này.
+
+---
+
+## 1. Thiết lập Backend kết nối Ollama
+
+Để đảm bảo mô hình trả về cấu hình JSON chuẩn xác giúp Outlook Add-in dễ dàng bóc tách dữ liệu, bạn nên dùng các model mạnh về suy luận như `llama3`, `mistral`, hoặc `qwen2.5` và kích hoạt tính năng **JSON Mode** của Ollama.
+
+### Tùy chọn A: Python Backend (FastAPI)
+
+Python có thư viện `ollama` chính thức, rất nhẹ và xử lý bất đồng bộ tốt.
+
+```python
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import ollama
+
+app = FastAPI()
+
+# Bật CORS để Outlook Add-in (chạy ở localhost hoặc domain khác) gọi được API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class EmailRequest(BaseModel):
+    subject: str
+    body: str
+
+@app.post("/api/analyze-email")
+async def analyze_email(req: EmailRequest):
+    prompt = f"""
+    Bạn là một trợ lý email thông minh chuyên nghiệp. Hãy phân tích chuỗi email (mail loop) dưới đây.
+    
+    Tiêu đề: {req.subject}
+    Nội dung chuỗi email:
+    {req.body}
+    
+    Hãy trả về một đối tượng JSON duy nhất có cấu trúc chính xác như sau:
+    {{
+      "summary": ["Ý chính 1 của email...", "Ý chính 2 của email..."],
+      "suggestedReplies": [
+        {{
+          "label": "Đồng ý / Chấp thuận",
+          "content": "Nội dung email phản hồi lịch sự, mang tính đồng ý..."
+        }},
+        {{
+          "label": "Từ chối / Cần cân nhắc thêm",
+          "content": "Nội dung email phản hồi từ chối khéo léo hoặc hẹn lịch lại..."
+        }}
+      ]
+    }}
+    """
+    
+    try:
+        # Sử dụng model llama3 hoặc qwen2.5 tùy cấu hình máy của bạn
+        response = ollama.generate(
+            model='llama3', 
+            prompt=prompt,
+            format='json', # Ép Ollama chỉ trả về JSON
+            options={"temperature": 0.3} # Giảm độ sáng tạo để bám sát ngữ cảnh mail
+        )
+        return response['response']
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+```
+
+### Tùy chọn B: Java Backend (Spring Boot 3.x + Spring AI)
+
+Nếu bạn muốn dùng Java 21, dự án **Spring AI** hỗ trợ Ollama nguyên bản thông qua `OllamaChatModel`.
+
+```java
+@RestController
+@CrossOrigin(origins = "*")
+@RequestMapping("/api")
+public class EmailController {
+
+    private final OllamaChatModel chatModel;
+
+    public EmailController(OllamaChatModel chatModel) {
+        this.chatModel = chatModel;
+    }
+
+    @PostMapping("/analyze-email")
+    public String analyzeEmail(@RequestBody EmailRequest request) {
+        String prompt = """
+            Bạn là một trợ lý email. Hãy phân tích chuỗi email này và trả về JSON gồm:
+            1. 'summary' (mảng các chuỗi tóm tắt)
+            2. 'suggestedReplies' (mảng các object chứa 'label' và 'content').
+            
+            Tiêu đề: %s
+            Nội dung: %s
+            """.formatted(request.getSubject(), request.getBody());
+
+        // Kích hoạt JSON mode thông qua Options
+        ChatResponse response = chatModel.call(
+            new Prompt(prompt, OllamaOptions.create().withFormat("json").withTemperature(0.3f))
+        );
+        
+        return response.getResult().getOutput().getContent();
+    }
+}
+
+```
+
+---
+
+## 2. Mã nguồn Frontend Outlook Add-in (Xử lý giao diện)
+
+Tại file `taskpane.ts` (hoặc `.tsx` nếu dùng React) của Outlook Add-in, bạn viết hàm fetch dữ liệu từ Backend và hiển thị lên giao diện.
+
+```typescript
+// Gọi hàm này khi người dùng click nút "Phân tích Email" trên Add-in Taskpane
+async function onAnalyzeEmailClick() {
+  showLoading(true);
+  
+  const item = Office.context.mailbox.item;
+  
+  // Lấy nội dung body dưới dạng Text phẳng để giảm token thừa (HTML tags)
+  item.body.getAsync(Office.CoercionType.Text, async (result) => {
+    if (result.status === Office.AsyncResultStatus.Succeeded) {
+      const emailData = {
+        subject: item.subject,
+        body: result.value
+      };
+
+      try {
+        // Gọi đến Backend của bạn (Ví dụ chạy ở port 8000)
+        const response = await fetch("http://localhost:8000/api/analyze-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(emailData)
+        });
+
+        const data = await response.json();
+        // Nếu Backend trả về string JSON, ta parse nó ra
+        const aiResult = typeof data === 'string' ? JSON.parse(data) : data;
+
+        renderOutput(aiResult);
+      } catch (error) {
+        console.error("Lỗi kết nối AI Backend:", error);
+      } finally {
+        showLoading(false);
+      }
+    }
+  });
+}
+
+// Hiển thị kết quả lên giao diện HTML của Taskpane
+function renderOutput(aiResult: any) {
+  // 1. Hiển thị Summary
+  const summaryContainer = document.getElementById("summary-list");
+  summaryContainer.innerHTML = aiResult.summary.map(item => `<li>${item}</li>`).join("");
+
+  // 2. Hiển thị các nút Gợi ý trả lời (Suggested Replies)
+  const repliesContainer = document.getElementById("replies-container");
+  repliesContainer.innerHTML = ""; // Clear cũ
+
+  aiResult.suggestedReplies.forEach((reply: any) => {
+    const btn = document.createElement("button");
+    btn.className = "reply-btn";
+    btn.innerText = reply.label;
+    
+    // Khi click vào nút, tự động tạo khung Reply All trong Outlook và chèn text vào
+    btn.onclick = () => {
+      Office.context.mailbox.item.displayReplyAllForm({
+        htmlBody: `<p>${reply.content.replace(/\n/g, '<br>')}</p>`
+      });
+    };
+    
+    repliesContainer.appendChild(btn);
+  });
+}
+
+```
+
+---
+
+## 3. Kinh nghiệm tối ưu khi chạy Ollama cho Email
+
+1. **Vấn đề Context Window (Chuỗi mail quá dài):**
+Các chuỗi mail loop dài dằng dặc thường chứa rất nhiều chữ ký (Signatures), text thừa kiểu `"From:...", "To:...", "Date:..."`. Trước khi gửi `body` lên Ollama, backend của bạn nên dùng Regex để cắt bỏ bớt các đoạn text trùng lặp hoặc giới hạn khoảng **4000 - 8000 ký tự gần nhất** để tránh làm nghẽn mô hình local.
+2. **Lựa chọn Model phù hợp:**
+* **Máy cấu hình vừa phải (M1/M2 Mac 16GB, hoặc PC có Card RTX 3060/4060):** Hãy dùng `qwen2.5:7b` hoặc `llama3:8b`. Chúng hiểu tiếng Việt rất tốt và phản hồi trong khoảng 3-5 giây.
+* **Máy cấu hình yếu (Không có GPU rời):** Nên thử nghiệm với `qwen2.5:3b` hoặc `phi3` để đảm bảo tốc độ phản hồi dưới 10 giây, tránh việc Add-in bị timeout.
+
+
+3. **Cấu hình `OLLAMA_NUM_PARALLEL`:**
+Nếu plugin này cài cho nhiều nhân viên trong công ty cùng xài chung một máy chủ Ollama tập trung, hãy nhớ cấu hình biến môi trường `OLLAMA_NUM_PARALLEL=4` (hoặc hơn) để Ollama có thể xử lý đồng thời nhiều request tóm tắt mail cùng một lúc.

@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+backend-nodejs/node_modules/
+
+# Build output
+dist/
+lib/
+
+# Models (too large for git)
+models/*.gguf
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+backend/.venv/
+
+# Java
+backend-java/target/
+*.class
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Code Intelligence (local)
+.code-intel/
+
+# Certificates
+*.pem
+*.crt
+*.key

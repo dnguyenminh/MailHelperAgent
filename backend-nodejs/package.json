@@ -1,0 +1,16 @@
+{
+  "name": "email-helper-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Email Helper Agent Backend - Node.js + Embedded GGUF",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "node-llama-cpp": "^3.1.1"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "code-intelligence": {
+      "url": "http://127.0.0.1:9281/mcp",
+      "transportType": "httpStream",
+      "disabled": false,
+      "type": "httpStream",
+      "command": "npx",
+      "args": [
+        "mcp-code-intelligence@latest",
+        "--config",
+        "c:\\projects\\outlook\\MailhelperAgent/.code-intel/orchestration.json"
+      ],
+      "cwd": "c:\\projects\\outlook\\MailhelperAgent",
+      "env": {
+        "CODE_INTEL_WORKSPACE": "c:\\projects\\outlook\\MailhelperAgent",
+        "CODE_INTEL_VIEWER_PORT": "3200",
+        "FORCE_RESTART": "15"
+      }
+    }
+  }
+}

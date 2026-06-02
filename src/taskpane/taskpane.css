@@ -1,0 +1,308 @@
+/**
+ * Outlook Email Helper Agent — Styles
+ */
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #fafafa;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #0078d4;
+  color: white;
+}
+
+.app-title {
+  margin: 0;
+  color: white;
+  font-weight: 600;
+}
+
+/* Sideload message */
+.sideload-msg {
+  padding: 20px;
+  text-align: center;
+}
+
+/* App body */
+.app-body {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e1e1e1;
+  border-top-color: #0078d4;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  margin-top: 12px;
+  color: #605e5c;
+}
+
+/* Error */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.error-icon {
+  color: #d13438;
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.error-text {
+  color: #605e5c;
+  margin-bottom: 16px;
+}
+
+/* Empty */
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  color: #605e5c;
+}
+
+/* Email metadata */
+.email-metadata {
+  background: white;
+  border: 1px solid #edebe9;
+  border-radius: 4px;
+  padding: 12px 16px;
+}
+
+.email-subject {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #323130;
+  word-break: break-word;
+}
+
+.email-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-row {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.info-label {
+  color: #605e5c;
+  font-weight: 600;
+  min-width: 50px;
+}
+
+.info-value {
+  color: #323130;
+  word-break: break-word;
+}
+
+.truncated-badge {
+  display: inline-block;
+  background: #fff4ce;
+  color: #835d00;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  margin-left: 6px;
+}
+
+/* Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #0078d4;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #106ebe;
+}
+
+.btn-secondary {
+  background: #f3f2f1;
+  color: #323130;
+  border: 1px solid #8a8886;
+}
+
+.btn-secondary:hover {
+  background: #edebe9;
+}
+
+/* Summary section (OEHA-3) */
+#summary-section {
+  margin-top: 12px;
+}
+
+.summary-container {
+  background: white;
+  border-left: 4px solid #0078d4;
+  border-radius: 4px;
+  padding: 12px 16px;
+}
+
+.summary-header {
+  margin: 0 0 8px 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.summary-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.summary-list li {
+  margin-bottom: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Reply section (OEHA-4) */
+#reply-section {
+  margin-top: 12px;
+}
+
+.reply-btn-group {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.reply-option-btn {
+  padding: 8px 16px;
+  border: 1px solid #0078d4;
+  border-radius: 4px;
+  background: white;
+  color: #0078d4;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.reply-option-btn:hover {
+  background: #f0f6ff;
+}
+
+.reply-option-btn.active {
+  background: #0078d4;
+  color: white;
+}
+
+.reply-preview {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+  border: 1px solid #edebe9;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: -60px;
+  left: 16px;
+  right: 16px;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: bottom 0.3s ease;
+  z-index: 1000;
+}
+
+.toast.visible {
+  bottom: 16px;
+}
+
+.toast-success {
+  background: #dff6dd;
+  border-left: 4px solid #107c10;
+  color: #107c10;
+}
+
+.toast-error {
+  background: #fde7e9;
+  border-left: 4px solid #d13438;
+  color: #d13438;
+}
+
+.toast-info {
+  background: #f0f6ff;
+  border-left: 4px solid #0078d4;
+  color: #0078d4;
+}
+
+/* Placeholder */
+.placeholder-text {
+  color: #605e5c;
+  font-style: italic;
+  font-size: 13px;
+  padding: 8px;
+}

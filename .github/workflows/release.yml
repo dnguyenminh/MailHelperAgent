@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Package release
+        run: |
+          mkdir -p release
+          # Frontend dist
+          cp -r dist release/frontend
+          # Manifest
+          cp manifest.json release/
+          # Backend Python
+          cp -r backend release/backend-python
+          # Backend Node.js
+          cp -r backend-nodejs release/backend-nodejs
+          # Backend Java (source)
+          cp -r backend-java release/backend-java
+          # Models README
+          mkdir -p release/models
+          cp models/README.md release/models/
+          # Main README
+          cp README.md release/
+          # Create archive
+          cd release && zip -r ../MailHelperAgent-${{ github.ref_name }}.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: MailHelperAgent-${{ github.ref_name }}.zip
+          generate_release_notes: true
+          body: |
+            ## 📧 Outlook Email Helper Agent ${{ github.ref_name }}
+
+            ### What's included:
+            - ✅ Frontend (pre-built dist)
+            - ✅ Backend Python (FastAPI + llama-cpp-python)
+            - ✅ Backend Node.js (Express + node-llama-cpp)
+            - ✅ Backend Java (Spring Boot + de.kherud:llama)
+            - ✅ Outlook manifest.json
+
+            ### Setup:
+            1. Download & extract the zip
+            2. Download model: `huggingface-cli download Qwen/Qwen2.5-3B-Instruct-GGUF qwen2.5-3b-instruct-q4_k_m.gguf --local-dir models/`
+            3. Start one backend (see README.md)
+            4. Sideload `manifest.json` into Outlook

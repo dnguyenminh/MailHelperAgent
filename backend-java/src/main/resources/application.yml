@@ -1,0 +1,5 @@
+server:
+  port: 8000
+
+model:
+  path: ../models/qwen2.5-3b-instruct-q4_k_m.gguf
