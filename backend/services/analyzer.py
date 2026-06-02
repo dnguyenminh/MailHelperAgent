@@ -6,9 +6,17 @@ OEHA-3/4: Email analyzer — Supports 2 modes:
 
 import json
 import os
+import logging
 from pathlib import Path
 from .preprocessor import TextPreprocessor
 
+# OEHA-14: Module-level conditional import for ollama
+try:
+    import ollama as _ollama_module
+except ImportError:
+    _ollama_module = None
+
+logger = logging.getLogger(__name__)
 
 AI_MODE = os.getenv("AI_MODE", "ollama")  # "ollama" or "embedded"
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b-instruct-q4_K_M")
@@ -45,8 +53,10 @@ def _get_embedded_llm():
 
 def _call_ollama(prompt: str) -> str:
     """Call Ollama API."""
-    import ollama
-    response = ollama.generate(
+    # OEHA-14: Use module-level import instead of per-call import
+    if _ollama_module is None:
+        raise ImportError("ollama package not installed. Run: pip install ollama")
+    response = _ollama_module.generate(
         model=OLLAMA_MODEL,
         prompt=prompt,
         format="json",
@@ -76,6 +86,26 @@ class EmailAnalyzer:
     def __init__(self):
         self.preprocessor = TextPreprocessor()
         self.mode = AI_MODE
+
+    @staticmethod
+    def validate_startup():
+        """OEHA-14: Validate configuration at startup. Call this during app init."""
+        if AI_MODE == "embedded":
+            model_path = Path(MODEL_PATH)
+            if not model_path.exists():
+                raise FileNotFoundError(
+                    f"AI_MODE=embedded but model file not found at: {MODEL_PATH}\n"
+                    "Download: huggingface-cli download Qwen/Qwen2.5-3B-Instruct-GGUF "
+                    "qwen2.5-3b-instruct-q4_k_m.gguf --local-dir models/"
+                )
+            logger.info(f"Startup validation OK: embedded model found at {MODEL_PATH}")
+        elif AI_MODE == "ollama":
+            if _ollama_module is None:
+                logger.warning("AI_MODE=ollama but 'ollama' package not installed. Install: pip install ollama")
+            else:
+                logger.info(f"Startup validation OK: ollama mode, model={OLLAMA_MODEL}, host={OLLAMA_HOST}")
+        else:
+            raise ValueError(f"Invalid AI_MODE: '{AI_MODE}'. Must be 'ollama' or 'embedded'.")
 
     def get_mode_info(self) -> dict:
         """Return current mode and model info."""

@@ -38,10 +38,10 @@ export class UIRenderer {
   private renderError(error: string): void {
     const message = this.getErrorMessage(error);
     this.containerEl.innerHTML = `
-      <div class="error-container">
-        <i class="ms-Icon ms-Icon--Warning error-icon"></i>
+      <div class="error-container" role="alert" aria-live="assertive">
+        <i class="ms-Icon ms-Icon--Warning error-icon" aria-hidden="true"></i>
         <p class="error-text">${message}</p>
-        <button id="btn-retry" class="btn btn-secondary">Thử lại</button>
+        <button id="btn-retry" class="btn btn-secondary" aria-label="Thử tải lại email">Thử lại</button>
       </div>
     `;
   }
@@ -85,8 +85,8 @@ export class UIRenderer {
         </div>
       </div>
       <div class="action-buttons">
-        <button id="btn-summarize" class="btn btn-primary">📋 Tóm tắt</button>
-        <button id="btn-suggest" class="btn btn-primary">💬 Gợi ý trả lời</button>
+        <button id="btn-summarize" class="btn btn-primary" aria-label="Tóm tắt nội dung email">📋 Tóm tắt</button>
+        <button id="btn-suggest" class="btn btn-primary" aria-label="Gợi ý trả lời email">💬 Gợi ý trả lời</button>
       </div>
       <div id="summary-section"></div>
       <div id="reply-section"></div>

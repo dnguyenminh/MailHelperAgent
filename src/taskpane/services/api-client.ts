@@ -4,7 +4,8 @@
 
 import { AnalyzeResponse } from "../types";
 
-const BACKEND_URL = "http://localhost:8000";
+// OEHA-12: BACKEND_URL configurable via env var (webpack DefinePlugin) or defaults to relative URL
+const BACKEND_URL = process.env.BACKEND_URL || "";
 const TIMEOUT_MS = 30000;
 
 export class ApiClient {

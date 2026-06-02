@@ -26,6 +26,9 @@ app.add_middleware(
 
 analyzer = EmailAnalyzer()
 
+# OEHA-14: Validate config at startup (fail fast if model missing)
+EmailAnalyzer.validate_startup()
+
 
 @app.get("/health")
 async def health():

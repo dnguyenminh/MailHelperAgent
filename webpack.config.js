@@ -3,6 +3,7 @@
 const devCerts = require("office-addin-dev-certs");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const webpack = require("webpack");
 
 const urlDev = "https://localhost:3000/";
 const urlProd = "https://www.contoso.com/"; // CHANGE THIS TO YOUR PRODUCTION DEPLOYMENT LOCATION
@@ -51,6 +52,10 @@ module.exports = async (env, options) => {
       ],
     },
     plugins: [
+      // OEHA-12: Inject BACKEND_URL from env at build time (defaults to localhost:8000 for dev)
+      new webpack.DefinePlugin({
+        "process.env.BACKEND_URL": JSON.stringify(process.env.BACKEND_URL || (dev ? "http://localhost:8000" : "")),
+      }),
       new HtmlWebpackPlugin({
         filename: "taskpane.html",
         template: "./src/taskpane/taskpane.html",
